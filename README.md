@@ -91,15 +91,24 @@ There is a real Android app in `android/`, and a built, signed apk sitting at
    screen.
 
 ### First run
-The app asks for one thing: the address your panel is on. That is the machine
-running the bot plus your `PANEL_PORT`, for example `http://192.168.1.20:8080`.
-Type it in and press connect. It remembers it, so you only do this once —
-**change address** in the menu if it ever moves.
+Open it. That is the whole step.
 
-**Do not know the address?** Run **`/panel`** in Discord. The bot works out the
-machine's own address and hands you the exact line to type, and tells you if the
-panel is switched off or the password is too short. It only answers you, the
-bot owner, and only you can see the reply.
+The bot announces itself on your wifi over mdns, and the app listens for it —
+finds it, connects, done. No address to look up and nothing to type. It saves
+what it found, so every launch after that goes straight to the panel.
+
+If more than one panel turns up, they are listed and you tap the one you want.
+
+Two fallbacks, if the announcement never arrives (some routers block mdns, and
+guest networks usually do):
+
+- Run **`/panel`** in Discord. The bot works out its own address and hands you
+  the exact line to type, and tells you if the panel is switched off or the
+  password is too short. Owner only, and only you see the reply.
+- Or type it yourself in the box on the same screen — the bot machine's address
+  plus your `PANEL_PORT`, e.g. `http://192.168.1.20:8080`.
+
+**change address** in the menu gets you back to this screen if things move.
 
 Then the panel password, once, and it stays logged in.
 

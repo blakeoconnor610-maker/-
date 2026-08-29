@@ -100,6 +100,9 @@ class ChillBot(commands.Bot):
 
     async def close(self) -> None:
         if self.panel_runner is not None:
+            stop_advert = getattr(self.panel_runner, "panel_zeroconf_stop", None)
+            if stop_advert is not None:
+                await stop_advert()
             await self.panel_runner.cleanup()
         await self.db.close()
         await super().close()

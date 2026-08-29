@@ -22,19 +22,35 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/searching"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:lineSpacingExtra="3dp"
-            android:text="@string/setup_note"
+            android:text="@string/searching"
             android:textColor="@color/dim"
             android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/found"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:letterSpacing="0.08"
+            android:text="@string/or_type"
+            android:textColor="@color/dim"
+            android:textSize="13sp" />
 
         <EditText
             android:id="@+id/url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="8dp"
             android:autofillHints="none"
             android:background="@color/panel"
             android:hint="@string/setup_hint"
@@ -57,9 +73,18 @@
             android:id="@+id/connect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:backgroundTint="@color/accent"
             android:text="@string/connect"
             android:textColor="#16181C" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/setup_note"
+            android:textColor="@color/dim"
+            android:textSize="13sp" />
     </LinearLayout>
 </ScrollView>

@@ -2,7 +2,12 @@
 <resources>
     <string name="app_name">server panel</string>
     <string name="setup_title">connect to your bot</string>
-    <string name="setup_note">put in the address your control panel is on. that is the machine running the bot, plus the port you set as PANEL_PORT.\n\nyou also have to set PANEL_ENABLED=true in the bot\'s .env and restart it, otherwise there is nothing here to connect to.</string>
+    <string name="searching">looking for your bot on this wifi…</string>
+    <string name="found_none">nothing found yet. make sure the bot is running with PANEL_ENABLED=true, and that this phone is on the same wifi.</string>
+    <string name="found_one">found it. connecting…</string>
+    <string name="found_many">found these on your network — tap one</string>
+    <string name="or_type">or type the address yourself</string>
+    <string name="setup_note">the bot announces itself on your wifi, so you should not have to type anything. if it does not turn up, run /panel in discord and it will tell you the address.</string>
     <string name="setup_hint">http://192.168.1.20:8080</string>
     <string name="connect">connect</string>
     <string name="menu_reload">reload</string>

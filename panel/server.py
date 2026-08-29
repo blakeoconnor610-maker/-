@@ -15,7 +15,13 @@ from pathlib import Path
 import discord
 from aiohttp import web
 
+from core.netinfo import local_ips
+
 log = logging.getLogger("bot.panel")
+
+# Advertised over mdns so the phone app can find the panel without anyone
+# typing an ip address.
+SERVICE_TYPE = "_chillpanel._tcp.local."
 
 STATIC = Path(__file__).parent / "static"
 COOKIE = "panel_session"
@@ -194,6 +200,56 @@ def build_app(bot: discord.Client, password: str) -> web.Application:
     return app
 
 
+async def _advertise(bot: discord.Client, port: int):
+    """Announce the panel on the local network.
+
+    Returns a coroutine function that takes the announcement back down, or None
+    if we could not advertise. Never fatal - the app can always be pointed at an
+    address by hand.
+    """
+    try:
+        import socket
+
+        from zeroconf import ServiceInfo
+        from zeroconf.asyncio import AsyncZeroconf
+    except ImportError:
+        log.info("zeroconf is not installed, the app will need the address typed in")
+        return None
+
+    addresses = [socket.inet_aton(ip) for ip in local_ips()]
+    if not addresses:
+        log.info("no local address to advertise on")
+        return None
+
+    name = str(bot.user) if bot.user else "server panel"
+    info = ServiceInfo(
+        SERVICE_TYPE,
+        f"{name[:40]}.{SERVICE_TYPE}",
+        addresses=addresses,
+        port=port,
+        properties={"path": "/", "app": "chillbot-panel"},
+        server=f"chillbot-panel-{port}.local.",
+    )
+
+    try:
+        aiozc = AsyncZeroconf()
+        await aiozc.async_register_service(info)
+    except Exception:
+        log.exception("could not advertise the panel on the network")
+        return None
+
+    log.info("advertising the panel on the local network as %s", name)
+
+    async def stop() -> None:
+        try:
+            await aiozc.async_unregister_service(info)
+            await aiozc.async_close()
+        except Exception:
+            pass
+
+    return stop
+
+
 async def start_panel(bot: discord.Client) -> web.AppRunner:
     password = (os.getenv("PANEL_PASSWORD") or "").strip()
     if len(password) < 12:
@@ -207,5 +263,8 @@ async def start_panel(bot: discord.Client) -> web.AppRunner:
     await runner.setup()
     site = web.TCPSite(runner, host, port)
     await site.start()
+
+    # Hung off the runner so the bot can take it down again on shutdown.
+    runner.panel_zeroconf_stop = await _advertise(bot, port)  # type: ignore[attr-defined]
     log.info("control panel listening on http://%s:%s", host, port)
     return runner
