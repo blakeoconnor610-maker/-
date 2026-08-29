@@ -12,6 +12,7 @@ from discord.ext import commands
 
 from core import ui
 from core.checks import staff_only
+from core.netinfo import panel_state
 from core.smallcaps import small
 
 HELP_SECTIONS: dict[str, list[tuple[str, str]]] = {
@@ -69,6 +70,7 @@ HELP_SECTIONS: dict[str, list[tuple[str, str]]] = {
         ("/avatar", "pull someones avatar"),
         ("/poll", "quick poll with buttons"),
         ("/smallcaps", "convert text to the small caps font"),
+        ("/panel", "the address to put in the phone app"),
         ("/ping", "check the bot is alive"),
     ],
 }
@@ -303,6 +305,52 @@ class Utility(commands.Cog):
                 f"**{guild.member_count}** total\n**{humans}** people\n"
                 f"**{(guild.member_count or 0) - humans}** bots",
             )
+        )
+
+    @app_commands.command(
+        name="panel",
+        description="the address to type into the phone app",
+    )
+    @app_commands.guild_only()
+    async def panel(self, interaction: discord.Interaction) -> None:
+        if not await self.bot.is_owner(interaction.user):
+            await interaction.response.send_message(embed=ui.error("owner only"), ephemeral=True)
+            return
+
+        state = panel_state()
+
+        if state["problem"]:
+            body = (
+                f"the panel is not running: **{state['problem']}**.\n\n"
+                "open the bot's `.env`, set\n"
+                "```\nPANEL_ENABLED=true\nPANEL_PORT=8080\n"
+                "PANEL_PASSWORD=<a long random string>\n```\n"
+                "then restart the bot and run this again."
+            )
+            await interaction.response.send_message(
+                embed=ui.warn(body, title="panel is off"), ephemeral=True
+            )
+            return
+
+        if state["addresses"]:
+            addresses = "\n".join(f"`{address}`" for address in state["addresses"])
+        else:
+            addresses = (
+                "i could not work out this machine's address. run `ip addr` "
+                "(or `ipconfig` on windows) on the machine the bot is on and use "
+                f"whatever starts with 192.168 or 10., with `:{state['port']}` on the end."
+            )
+
+        body = (
+            "put one of these into the phone app, or any browser:\n\n"
+            f"{addresses}\n\n"
+            "your phone has to be on the same network as this machine. if there is "
+            "more than one, try them in order - the first is usually right.\n\n"
+            f"**listening on** `{state['host']}:{state['port']}`\n"
+            f"**reachable by** {state['reach']}"
+        )
+        await interaction.response.send_message(
+            embed=ui.embed("panel address", body), ephemeral=True
         )
 
     @app_commands.command(name="sync", description="owner only - refresh slash commands")

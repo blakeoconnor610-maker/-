@@ -96,6 +96,11 @@ running the bot plus your `PANEL_PORT`, for example `http://192.168.1.20:8080`.
 Type it in and press connect. It remembers it, so you only do this once —
 **change address** in the menu if it ever moves.
 
+**Do not know the address?** Run **`/panel`** in Discord. The bot works out the
+machine's own address and hands you the exact line to type, and tells you if the
+panel is switched off or the password is too short. It only answers you, the
+bot owner, and only you can see the reply.
+
 Then the panel password, once, and it stays logged in.
 
 ### What you can do from it
@@ -283,3 +288,5 @@ only the new one gets made.
 | delete logs say "unknown" | the bot needs View Audit Log |
 | nobody gains xp | Message Content Intent is off in the developer portal |
 | level ups post nowhere | `/config channel levels #channel` |
+| do not know the panel address | run `/panel` in discord |
+| app says it cant reach the panel | the bot is not running, `PANEL_ENABLED` is not true, or the phone is on a different network |
