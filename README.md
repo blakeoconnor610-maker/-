@@ -71,32 +71,55 @@ role changes, timeouts, bans, unbans, channel and role creation and deletion.
 `/say` posts into **any** channel from any channel, `/embed` posts a tidy embed,
 `/edit` changes something the bot already said, `/dm` messages a person, and
 `/announce` posts with an optional role ping. All of it works from the Discord
-mobile app.
+mobile app — or from the Android app in `android/`, which gives you a channel
+picker, a chat box, and switches for the bot's settings.
 
 ---
 
-## About the apk
+## The app
 
-I did not build an Android apk, and I would push back on wanting one: an apk
-that talks to Discord still needs your bot token shipped inside it, which means
-anyone who pulls the file apart owns your bot. It also needs signing, a Play
-Store listing or sideloading, and a rebuild every time you change something.
+There is a real Android app in `android/`, and a built, signed apk sitting at
+**`android/dist/chillbot-panel.apk`** — copy that to your phone and open it.
 
-What is in here instead does the same job:
+### Installing it
+1. Get `android/dist/chillbot-panel.apk` onto your phone (usb, google drive,
+   emailing it to yourself, whatever is easiest).
+2. Open it. Android will say the app came from an unknown source — that is just
+   what sideloading looks like. Allow it for your file manager or browser and
+   carry on.
+3. Open **server panel** from your app drawer and long-press it onto your home
+   screen.
 
-1. **`/say`** — from the Discord app on your phone, type `/say` in any channel,
-   pick a target channel, and the bot posts there. That is the whole feature,
-   with no extra app to install.
-2. **The control panel** (`panel/`) — a phone-sized web page listing every
-   channel the bot can post in, with a chat box. On Android, open it in Chrome
-   and tap **Add to home screen**: you get an icon and a full-screen app, which
-   is what an apk would have given you, without the token ever leaving your
-   server.
+### First run
+The app asks for one thing: the address your panel is on. That is the machine
+running the bot plus your `PANEL_PORT`, for example `http://192.168.1.20:8080`.
+Type it in and press connect. It remembers it, so you only do this once —
+**change address** in the menu if it ever moves.
 
-Turn the panel on in `.env`:
+Then the panel password, once, and it stays logged in.
+
+### What you can do from it
+
+**chat tab** — pick any channel the bot can post in and type. It sends as the
+bot, and shows the last 30 messages so you can see what you are replying to.
+
+**controls tab** — a card per server with real switches:
+
+- **leveling** on or off
+- **ping on level up** on or off
+
+plus the member count, how many tickets have been opened, and where logs, level
+ups, welcomes and ticket logs are currently pointing. Flipping a switch writes
+straight to the bot's database and takes effect on the next message — no restart.
+
+### Turning the panel on
+
+The app is a window onto the panel, so the panel has to be running for it to
+have anything to talk to. In the bot's `.env`:
 
 ```
 PANEL_ENABLED=true
+PANEL_HOST=0.0.0.0
 PANEL_PORT=8080
 PANEL_PASSWORD=<paste a long random string>
 ```
@@ -107,13 +130,47 @@ Generate the password with:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Then open `http://<your-server-ip>:8080`. **Only expose it over HTTPS** (put it
-behind Caddy, nginx or a Cloudflare tunnel) — the password is the only thing
-guarding it, and over plain http it travels in the clear. If the bot runs on
-your own machine, keep `PANEL_HOST=127.0.0.1` and reach it through a tunnel
-rather than opening a port.
+Restart the bot. It logs `control panel listening on ...` when it comes up. The
+bot refuses to start the panel with a password under 12 characters.
 
----
+`PANEL_HOST=0.0.0.0` means anything that can reach that machine on that port can
+reach the login page, so:
+
+- **On your own network** this is fine. The phone and the bot machine just need
+  to be on the same wifi.
+- **On a public server, put it behind https** — Caddy, nginx or a Cloudflare
+  tunnel. Over plain http the password crosses the network in the clear, and the
+  password is the only thing guarding it.
+- **Not exposing it at all** is the safest option: leave `PANEL_HOST=127.0.0.1`
+  and reach it through a tunnel or a vpn like Tailscale.
+
+The app allows plain http so the local-network case works out of the box.
+
+### What is not in the app
+
+Your bot token. It never leaves the machine running the bot — the app only ever
+holds the panel address and a session cookie. That is deliberate: an apk that
+talked to Discord directly would need the token baked inside it, and anyone who
+pulled the file apart would own your bot.
+
+### Rebuilding it
+
+You do not need to — the apk is already built and committed. If you change the
+app:
+
+```bash
+cd android
+./gradlew :app:apk          # writes dist/chillbot-panel.apk
+```
+
+You need a jdk (17 or newer) and the Android sdk; point `ANDROID_HOME` at it, or
+just open `android/` in Android Studio. Pushing a change under `android/` also
+builds it on GitHub Actions and attaches the apk to the run.
+
+It is signed with the key in `android/keystore/`, which is committed on purpose
+so that a rebuild installs over the top as an update rather than making you
+uninstall first. That key signs nothing but this one sideloaded app and guards
+no secrets. Swap it for your own before you first install if you would rather.
 
 ## Setting it up
 
@@ -198,7 +255,11 @@ cogs/
   utility.py        /help, info commands, polls
 panel/
   server.py         the phone control panel backend
-  static/index.html the panel itself
+  static/index.html the panel itself - chat and controls tabs
+android/
+  app/src/main/     the android app, three small java files
+  dist/             the built apk lives here
+  keystore/         the signing key, committed on purpose
 ```
 
 Everything is stored in `data/bot.db`. Back that file up and you keep every

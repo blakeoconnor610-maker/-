@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext http is allowed because the usual setup is the bot running on a box
+  on your own network, reached as http://192.168.x.x:8080. If you put the panel
+  on the public internet, front it with https and this stops mattering.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

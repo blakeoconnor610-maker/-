@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">server panel</string>
+    <string name="setup_title">connect to your bot</string>
+    <string name="setup_note">put in the address your control panel is on. that is the machine running the bot, plus the port you set as PANEL_PORT.\n\nyou also have to set PANEL_ENABLED=true in the bot\'s .env and restart it, otherwise there is nothing here to connect to.</string>
+    <string name="setup_hint">http://192.168.1.20:8080</string>
+    <string name="connect">connect</string>
+    <string name="menu_reload">reload</string>
+    <string name="menu_change">change address</string>
+    <string name="menu_logout">log out</string>
+    <string name="menu_browser">open in browser</string>
+    <string name="bad_url">that does not look like an address. it should read like http://192.168.1.20:8080</string>
+    <string name="offline">cant reach the panel.\n\ncheck the bot is running, that PANEL_ENABLED is true, and that this phone is on the same network as the machine running it.</string>
+    <string name="retry">try again</string>
+</resources>

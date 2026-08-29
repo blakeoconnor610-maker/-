@@ -51,6 +51,33 @@ def _visible_channels(bot: discord.Client) -> list[dict]:
     return out
 
 
+TOGGLES = {
+    "levels_enabled": "leveling",
+    "level_ping": "ping on level up",
+}
+
+
+def _guild_summary(bot: discord.Client, guild: discord.Guild, config: dict) -> dict:
+    def channel_name(column: str) -> str | None:
+        channel = guild.get_channel(config.get(column) or 0)
+        return channel.name if channel else None
+
+    return {
+        "id": str(guild.id),
+        "name": guild.name,
+        "members": guild.member_count or 0,
+        "channels": len(guild.text_channels),
+        "toggles": {key: bool(config.get(key)) for key in TOGGLES},
+        "wiring": {
+            "logs": channel_name("log_channel"),
+            "level ups": channel_name("level_channel"),
+            "welcome": channel_name("welcome_channel"),
+            "ticket logs": channel_name("ticket_log"),
+        },
+        "tickets_opened": config.get("ticket_counter", 0),
+    }
+
+
 def build_app(bot: discord.Client, password: str) -> web.Application:
     app = web.Application()
 
@@ -109,6 +136,31 @@ def build_app(bot: discord.Client, password: str) -> web.Application:
         messages.reverse()
         return web.json_response({"messages": messages})
 
+    async def guilds(request: web.Request) -> web.StreamResponse:
+        _require(request)
+        db = getattr(bot, "db", None)
+        if db is None:
+            return web.json_response({"guilds": [], "toggles": TOGGLES})
+        out = []
+        for guild in bot.guilds:
+            out.append(_guild_summary(bot, guild, await db.config(guild.id)))
+        return web.json_response({"guilds": out, "toggles": TOGGLES})
+
+    async def setting(request: web.Request) -> web.StreamResponse:
+        _require(request)
+        db = getattr(bot, "db", None)
+        if db is None:
+            return web.json_response({"error": "bot is still starting up"}, status=503)
+        body = await request.json()
+        guild_id = str(body.get("guild", ""))
+        key = str(body.get("key", ""))
+        if key not in TOGGLES:
+            return web.json_response({"error": "not something you can toggle"}, status=400)
+        if not guild_id.isdigit() or bot.get_guild(int(guild_id)) is None:
+            return web.json_response({"error": "unknown server"}, status=404)
+        await db.set_config(int(guild_id), **{key: int(bool(body.get("value")))})
+        return web.json_response({"ok": True})
+
     async def send(request: web.Request) -> web.StreamResponse:
         _require(request)
         body = await request.json()
@@ -135,6 +187,8 @@ def build_app(bot: discord.Client, password: str) -> web.Application:
     app.router.add_post("/api/login", login)
     app.router.add_get("/api/whoami", whoami)
     app.router.add_get("/api/channels", channels)
+    app.router.add_get("/api/guilds", guilds)
+    app.router.add_post("/api/setting", setting)
     app.router.add_get("/api/history", history)
     app.router.add_post("/api/send", send)
     return app
