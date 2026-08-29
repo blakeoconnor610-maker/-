@@ -7,6 +7,7 @@
     <string name="found_one">found it. connecting…</string>
     <string name="found_many">found these on your network — tap one</string>
     <string name="or_type">or type the address yourself</string>
+    <string name="this_phone">the bot is running on this phone (termux)</string>
     <string name="setup_note">the bot announces itself on your wifi, so you should not have to type anything. if it does not turn up, run /panel in discord and it will tell you the address.</string>
     <string name="setup_hint">http://192.168.1.20:8080</string>
     <string name="connect">connect</string>

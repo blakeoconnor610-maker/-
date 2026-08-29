@@ -102,6 +102,8 @@ If more than one panel turns up, they are listed and you tap the one you want.
 Two fallbacks, if the announcement never arrives (some routers block mdns, and
 guest networks usually do):
 
+- Press **the bot is running on this phone** if the bot is in Termux on the
+  same handset — loopback is not something mdns can announce on.
 - Run **`/panel`** in Discord. The bot works out its own address and hands you
   the exact line to type, and tells you if the panel is switched off or the
   password is too short. Owner only, and only you see the reply.
@@ -186,6 +188,56 @@ so that a rebuild installs over the top as an update rather than making you
 uninstall first. That key signs nothing but this one sideloaded app and guards
 no secrets. Swap it for your own before you first install if you would rather.
 
+## Where the bot actually runs
+
+Worth being clear about, because it trips people up: **the app is not the bot.**
+The bot is a python program that has to be running somewhere, logged into
+Discord, for anything to work. The app is a remote control for it.
+
+Three places to run it, best first:
+
+**A cheap vps** — a few dollars a month gets you a box that never sleeps, never
+loses wifi, and is not your phone battery. This is what a server bot wants.
+
+**A pc at home** — free, and fine. The bot is offline whenever the machine is
+off or asleep.
+
+**Your phone, in Termux** — free, and it does genuinely work, but Android will
+fight you: it kills background apps, and the bot is offline any time the phone
+is. Fine for trying it out, poor for a server people actually use.
+
+### Running it on your phone
+
+1. Install **Termux** from [F-Droid](https://f-droid.org/packages/com.termux/).
+   The Play Store copy is abandoned and too old to work.
+2. In Termux:
+
+   ```bash
+   pkg install git -y
+   git clone <this repo> bot && cd bot
+   bash termux-setup.sh
+   ```
+
+   That installs python, installs the dependencies, and writes you a `.env`
+   with the panel already switched on. **It prints a panel password — write it
+   down**, you type it into the app once.
+3. Paste your bot token in: `nano .env`, fill in `DISCORD_TOKEN`, then ctrl+o,
+   enter, ctrl+x.
+4. Start it:
+
+   ```bash
+   bash run-termux.sh
+   ```
+
+   That takes a wake lock so Android does not suspend it the second the screen
+   goes off. For a reliable one, install **Termux:API** too. Leave the Termux
+   notification alone — swiping it away kills the bot.
+5. Open the panel app and press **the bot is running on this phone**. That is
+   the loopback address; mdns discovery cannot find a bot on the same device,
+   so there is a button for it.
+
+Then run `/setup` in your server and you are going.
+
 ## Setting it up
 
 ### 1. Make the bot account
@@ -251,6 +303,8 @@ docker run -d --name chillbot --env-file .env -v "$PWD/data:/app/data" chillbot
 
 ```
 bot.py              startup, extension loading, command sync, error handling
+run.sh              one command setup and start, on a pc or server
+termux-setup.sh     the same thing for a phone, plus run-termux.sh to start it
 core/
   db.py             sqlite storage - config, levels, tickets, warnings
   smallcaps.py      the small caps font conversion

@@ -34,6 +34,9 @@ public class SetupActivity extends Activity implements Discovery.Callback {
     /** How long to wait for more panels before auto-connecting to a lone one. */
     private static final long SETTLE_MS = 1500;
 
+    /** Where the panel sits when the bot is running on this same phone. */
+    private static final String LOOPBACK = "http://127.0.0.1:8080";
+
     private final Map<String, String> discovered = new LinkedHashMap<>();
     private final Handler main = new Handler(Looper.getMainLooper());
 
@@ -86,6 +89,10 @@ public class SetupActivity extends Activity implements Discovery.Callback {
         };
 
         connect.setOnClickListener(view -> submit.run());
+
+        // Running the bot in Termux on this same phone: mdns will not find it,
+        // because loopback is not a network anything announces on.
+        findViewById(R.id.thisphone).setOnClickListener(view -> open(LOOPBACK));
         url.setOnEditorActionListener((view, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO) {
                 submit.run();
